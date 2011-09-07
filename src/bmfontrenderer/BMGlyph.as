@@ -1,6 +1,12 @@
 package bmfontrenderer
 {
-    public class BMFontGlyph
+    /**
+     * Represents a single glyph from a BMFont. A glyph is a character.
+     * 
+     * Note that field names must map identically to the strings in the .fnt
+     * file, as we directly assign based on key.
+     */
+    public class BMGlyph
     {
         public var id:int;
         public var x:int, y:int;
