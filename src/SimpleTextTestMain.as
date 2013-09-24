@@ -9,14 +9,14 @@ import flash.display.StageScaleMode;
 import flash.utils.ByteArray;
 
 [SWF(backgroundColor="0x1234567")]
-public class BMFontRenderer extends Sprite {
-	[Embed(source="arial_32.fnt", mimeType="application/octet-stream")]
+public class SimpleTextTestMain extends Sprite {
+	[Embed(source="testFont.fnt", mimeType="application/octet-stream")]
 	public var fontData:Class;
 
-	[Embed(source="arial_32.png")]
+	[Embed(source="testFont.png")]
 	public var fontSheet:Class;
 
-	public function BMFontRenderer() {
+	public function SimpleTextTestMain() {
 		// Don't scale.
 		stage.align = StageAlign.TOP_LEFT;
 		stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -29,11 +29,12 @@ public class BMFontRenderer extends Sprite {
 
 		//trace("Parsed " + bmfont.glyphMap.length + " glyphs");
 
-		BMFont.addSheet(0, (new fontSheet()).bitmapData, true);
+		BMFont.addSheet(0, (new fontSheet()).bitmapData);
 
 		// OK, draw some fonts!
-		var out:BitmapData = new BitmapData(200, 100, true, 0x0);
-		BMFont.drawString(out, 0, 0, "Hello, world!");
+		var out:BitmapData = new BitmapData(600, 300, true, 0x0);
+		BMFont.drawString(out, 0, 0, "Hello world!!");
+
 
 		var outb:Bitmap = new Bitmap(out);
 		addChild(outb);
