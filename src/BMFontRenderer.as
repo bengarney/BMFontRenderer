@@ -33,7 +33,7 @@ package
             
             trace("Parsed " + bmfont.glyphMap.length + " glyphs");
             
-            bmfont.addSheet(0, (new fontSheet()).bitmapData);
+            bmfont.addSheet(0, (new fontSheet()).bitmapData, true);
             
             // OK, draw some fonts!
             var out:BitmapData = new BitmapData(200, 100, true, 0x0);

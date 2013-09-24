@@ -51,21 +51,33 @@ package bmfontrenderer
             var curX:int = startX;
             var curY:int = startY;
             
+			var sourceRectangle:Rectangle = new Rectangle();
+			var destinationPoint:Point = new Point();
+            
             // Walk the string.
             for(var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++)
             {
                 // Identify the glyph.
                 var curChar:int = text.charCodeAt(curCharIdx);
                 var curGlyph:BMGlyph = glyphMap[curChar];
-                if(!curGlyph || !sheets[curGlyph.page]) 
+				var sourceBd:BitmapData = sheets[curGlyph.page];
+			
+				// skip missing glyphs.
+                if(!curGlyph || !sourceBd)
                     continue;
-                
+
+				// set draw parameters
+				sourceRectangle.x = curGlyph.x;
+				sourceRectangle.y = curGlyph.y;
+				sourceRectangle.width = curGlyph.width;
+				sourceRectangle.height = curGlyph.height;
+
+				destinationPoint.x = curX + curGlyph.xoffset;
+				destinationPoint.y = curY + curGlyph.yoffset;
+
                 // Draw the glyph.
-                target.copyPixels(sheets[curGlyph.page], 
-                    new Rectangle(curGlyph.x, curGlyph.y, curGlyph.width, curGlyph.height),
-                    new Point(curX + curGlyph.xoffset, curY + curGlyph.yoffset),
-                    null, null, true);
-                
+                target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
+
                 // Update cursor position
                 curX += curGlyph.xadvance;
             }
@@ -74,11 +86,15 @@ package bmfontrenderer
         /**
          * Add a bitmap sheet.
          */
-        public function addSheet(id:int, bits:BitmapData):void
+        public function addSheet(id:int, bits:BitmapData, isFlipped:Boolean = false):void
         {
             if(sheets[id] != null)
                 throw new Error("Overwriting sheet!");
-            sheets[id] = flipVert(bits);            
+
+			if (isFlipped)
+            	sheets[id] = flipVert(bits);
+			else
+				sheets[id] = bits;
         }
         
         /**
