@@ -10,6 +10,7 @@ import flash.utils.ByteArray;
 
 [SWF(backgroundColor="0x1234567")]
 public class BMFontRenderer extends Sprite {
+
 	[Embed(source="arial_32.fnt", mimeType="application/octet-stream")]
 	public var fontData:Class;
 
@@ -25,17 +26,15 @@ public class BMFontRenderer extends Sprite {
 		var fontBits:ByteArray = new fontData();
 		var font:String = fontBits.readUTFBytes(fontBits.length);
 
-		BMFont.parseFont(font);
-
-		//trace("Parsed " + bmfont.glyphMap.length + " glyphs");
-
-		BMFont.addSheet(0, (new fontSheet()).bitmapData, true);
+		BMFont.addFont(0, font, (new fontSheet()).bitmapData);
 
 		// OK, draw some fonts!
-		var out:BitmapData = new BitmapData(200, 100, true, 0x0);
-		BMFont.drawString(out, 0, 0, "Hello, world!");
+//		var out:BitmapData = new BitmapData(200, 100, true, 0x0);
+//		BMFont.drawString("Hello, world!", out);
 
-		var outb:Bitmap = new Bitmap(out);
+		var out2:BitmapData  = BMFont.createText("Hello, world!");
+
+		var outb:Bitmap = new Bitmap(out2);
 		addChild(outb);
 	}
 }
