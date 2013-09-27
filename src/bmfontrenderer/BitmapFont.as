@@ -22,6 +22,7 @@ import flash.utils.Dictionary;
 public class BitmapFont {
 
 	private static var glyphMap:Dictionary = new Dictionary();
+	private static var glyphLineHeight:Dictionary = new Dictionary();
 	private static var sheets:Dictionary = new Dictionary();
 
 	private static var defaultFont:String;
@@ -59,22 +60,16 @@ public class BitmapFont {
 	 *
 	 */
 	public static function drawString(text:String, target:BitmapData, fontName:String = null, startX:int = 0, startY:int = 0):void {
-
 		if (!fontName) {
 			fontName = defaultFont;
 		}
-
-		var curX:int = startX;
-		var curY:int = startY;
-
-		var sourceRectangle:Rectangle = new Rectangle();
-		var destinationPoint:Point = new Point();
-
 		var fontMap:Array = glyphMap[fontName];
 		var fontPics:Array = sheets[fontName];
-
 		if (fontMap && fontPics) {
-
+			var curX:int = startX;
+			var curY:int = startY;
+			var sourceRectangle:Rectangle = new Rectangle();
+			var destinationPoint:Point = new Point();
 			// Walk the string.
 			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
 				// Identify the glyph.
@@ -95,28 +90,22 @@ public class BitmapFont {
 							curCharIdx += 1;
 						}
 					}
-
 					curX = startX;
-					curY += 50;
-
+					curY += glyphLineHeight[fontName];
 				} else {
 					var curGlyph:BitmapGlyph = fontMap[curChar];
 
 					if (curGlyph) {
 						var sourceBd:BitmapData = fontPics[curGlyph.page];
-
 						// skip missing glyphs.
 						if (sourceBd) {
-
 							// set draw parameters
 							sourceRectangle.x = curGlyph.x;
 							sourceRectangle.y = curGlyph.y;
 							sourceRectangle.width = curGlyph.width;
 							sourceRectangle.height = curGlyph.height;
-
 							destinationPoint.x = curX + curGlyph.xoffset;
 							destinationPoint.y = curY + curGlyph.yoffset;
-
 							// Draw the glyph.
 							target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
 
@@ -131,35 +120,50 @@ public class BitmapFont {
 
 	public static function getTextSize(fontName:String, text:String):Point {
 		var retVal:Point = new Point();
-
+		if (!fontName) {
+			fontName = defaultFont;
+		}
 		var fontMap:Array = glyphMap[fontName];
 		var fontPics:Array = sheets[fontName];
-
 		if (fontMap && fontPics) {
-
+			var curX:int = 0;
+			var curY:int = 0;
 			// Walk the string.
 			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
 				// Identify the glyph.
 				var curChar:int = text.charCodeAt(curCharIdx);
-				var curGlyph:BitmapGlyph = fontMap[curChar];
-				if (curGlyph) {
-
-					var sourceBd:BitmapData = fontPics[curGlyph.page];
-
-					// skip missing glyphs.
-					if (sourceBd) {
-
-						if (curCharIdx == 0) {
-							retVal.x += curGlyph.xoffset;
+				if (curChar == newLineNChar || curChar == newLineRChar) {
+					// skip double new line chars.
+					if (curChar == newLineNChar && curCharIdx < text.length - 1) {
+						curChar = text.charCodeAt(curCharIdx + 1);
+						if (curChar == newLineRChar) {
+							curCharIdx += 1;
 						}
-						if (curCharIdx != text.length - 1) {
-							retVal.x += curGlyph.xadvance;
-						} else {
-							retVal.x += curGlyph.width;
+					}
+					if (curChar == newLineRChar && curCharIdx < text.length - 1) {
+						curChar = text.charCodeAt(curCharIdx + 1);
+						if (curChar == newLineNChar) {
+							curCharIdx += 1;
 						}
-
-						if (retVal.y < curGlyph.height + curGlyph.yoffset) {
-							retVal.y = curGlyph.height + curGlyph.yoffset;
+					}
+					curX = 0;
+					curY += glyphLineHeight[fontName];
+				} else {
+					var curGlyph:BitmapGlyph = fontMap[curChar];
+					if (curGlyph) {
+						var sourceBd:BitmapData = fontPics[curGlyph.page];
+						// skip missing glyphs.
+						if (sourceBd) {
+							var nextX:int = curX + curGlyph.xoffset + curGlyph.width;
+							var nextY:int = curY + curGlyph.yoffset + curGlyph.height;
+							if (retVal.x < nextX) {
+								retVal.x = nextX;
+							}
+							if (retVal.y < nextY) {
+								retVal.y = nextY;
+							}
+							// Update cursor position
+							curX += curGlyph.xadvance;
 						}
 					}
 				}
@@ -210,37 +214,22 @@ public class BitmapFont {
 	 * Parse a BMFont textual font description.
 	 */
 	private static function parseFont(fontName:String, fontDesc:String):void {
+		if (!glyphMap[fontName]) {
+			glyphMap[fontName] = new Array();
+		}
+
 		var fontLines:Array = fontDesc.split("\n");
 
 		for (var i:int = 0; i < fontLines.length; i++) {
-			// Lines can be one of:
-			//  info
-			//  page
-			//  chars
-			//  char
-			//  common
+			// Lines can be one of:  info,  page,  chars,  char,  common
 
 			var fontLine:Array = (fontLines[i] as String).split(" ");
 			var keyWord:String = (fontLine[0] as String).toLowerCase();
 
 			if (keyWord == "char") {
 				parseChar(fontName, fontLine);
-				continue;
-			}
-
-			if (keyWord == "info") {
-				// Ignore.
-				continue;
-			}
-
-			if (keyWord == "page") {
-				// Ignore.
-				continue;
-			}
-
-			if (keyWord == "chars") {
-				// Ignore.
-				continue;
+			} else if (keyWord == "common") {
+				parseLineHeight(fontName, fontLine);
 			}
 		}
 	}
@@ -249,12 +238,8 @@ public class BitmapFont {
 	 * Helper function to parse and register a glyph from a BMFont
 	 * description..
 	 */
-	protected static function parseChar(fontName:String, charLine:Array):void {
+	private static function parseChar(fontName:String, charLine:Array):void {
 		var g:BitmapGlyph = new BitmapGlyph();
-
-		if (!glyphMap[fontName]) {
-			glyphMap[fontName] = new Array();
-		}
 
 		for (var i:int = 1; i < charLine.length; i++) {
 			// Parse to key value.
@@ -270,6 +255,20 @@ public class BitmapFont {
 			}
 		}
 		glyphMap[fontName][g.id] = g;
+	}
+
+	private static function parseLineHeight(fontName:String, commonLine:Array):void {
+		glyphLineHeight[fontName] = 0;
+		for (var i:int = 1; i < commonLine.length; i++) {
+			// Parse to key value.
+			var charEntry:Array = (commonLine[i] as String).split("=");
+			if (charEntry.length == 2) {
+				var charKey:String = charEntry[0];
+				if (charKey == "lineHeight") {
+					glyphLineHeight[fontName] = int(charEntry[1]);
+				}
+			}
+		}
 	}
 
 

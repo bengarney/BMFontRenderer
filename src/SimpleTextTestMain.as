@@ -64,8 +64,6 @@ public class SimpleTextTestMain extends Sprite {
 //		outb2.x = 200;
 //		outb2.y = 100;
 
-
-
 		border = new Sprite();
 		border.x = 220;
 		border.y = 20;
