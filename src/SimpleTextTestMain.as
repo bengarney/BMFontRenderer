@@ -1,6 +1,8 @@
 package {
 import bmfontrenderer.BitmapFont;
+import bmfontrenderer.BitmapTextAlign;
 
+import com.bit101.components.ComboBox;
 import com.bit101.components.Text;
 
 import flash.display.Bitmap;
@@ -26,12 +28,15 @@ public class SimpleTextTestMain extends Sprite {
 	[Embed(source="test2Font.png")]
 	public var fontSheet2:Class;
 
-	public var testText:Text;
 
 	private var outputBd:BitmapData;
 	private var output:Bitmap;
 
 	private var border:Sprite;
+
+	private var fontNames:ComboBox;
+	private var testText:Text;
+	private var textAlignment:ComboBox;
 
 	private static const TEST_FONT:String = "testFont";
 
@@ -69,11 +74,27 @@ public class SimpleTextTestMain extends Sprite {
 		border.y = 20;
 		addChild(border);
 
+		fontNames = new ComboBox(this, 5, 5);
 
-		testText = new Text(this, 5, 5, "Hello!");
+		fontNames.addItem(TEST_FONT);
+		fontNames.addItem(TEST_FONT_2);
+		fontNames.selectedIndex = 0;
+		fontNames.addEventListener(Event.SELECT, handleTextInput);
+
+		testText = new Text(this, 5, 30, "Hello!");
 		testText.addEventListener(Event.CHANGE, handleTextInput);
 
+		textAlignment = new ComboBox(this, 5, 150);
+
+		textAlignment.addItem(BitmapTextAlign.LEFT);
+		textAlignment.addItem(BitmapTextAlign.CENTER);
+		textAlignment.addItem(BitmapTextAlign.RIGHT);
+
+		textAlignment.selectedIndex = 0;
+		textAlignment.addEventListener(Event.SELECT, handleTextInput);
+
 		handleTextInput();
+
 	}
 
 	private function handleTextInput(event:Event = null):void {
@@ -82,13 +103,11 @@ public class SimpleTextTestMain extends Sprite {
 			removeChild(output);
 		}
 
-		outputBd =  BitmapFont.createText(testText.text);
+		outputBd = BitmapFont.createText(testText.text, String(fontNames.selectedItem), 0, 0, String(textAlignment.selectedItem));
 		output = new Bitmap(outputBd);
 		addChild(output);
 		output.x = 220;
 		output.y = 20;
-		outputBd
-
 
 		border.graphics.clear();
 		border.graphics.lineStyle(0.1, 0);

@@ -30,19 +30,17 @@ public class BitmapFont {
 	private static var newLineNChar:int;
 	private static var newLineRChar:int;
 
+
 	//---------------------------------
 	//
 	//---------------------------------
 
-	public static function createText(text:String, fontName:String = null, startX:int = 0, startY:int = 0):BitmapData {
+	public static function createText(text:String, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left"):BitmapData {
 		var retVal:BitmapData;
-		if (!fontName) {
-			fontName = defaultFont;
-		}
-		var size:Point = getTextSize(fontName, text);
-		if (size.x && size.y) {
-			retVal = new BitmapData(startX + size.x, startY + size.y, true, 0xFF);
-			drawString(text, retVal, fontName, startX, startY);
+		var blockVo:BitmapBlockVO = getTextSize(fontName, text);
+		if (blockVo.width && blockVo.height) {
+			retVal = new BitmapData(startX + blockVo.width, startY + blockVo.height, true, 0xFF);
+			drawString(text, retVal, fontName, startX, startY, textAlign);
 		} else {
 			retVal = new BitmapData(1, 1, true, 0xFF);
 		}
@@ -59,24 +57,32 @@ public class BitmapFont {
 	 * @param startY Y pixel position to start drawing at.
 	 *
 	 */
-	public static function drawString(text:String, target:BitmapData, fontName:String = null, startX:int = 0, startY:int = 0):void {
+	public static function drawString(text:String, target:BitmapData, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left"):void {
 		if (!fontName) {
 			fontName = defaultFont;
 		}
+		var blockVo:BitmapBlockVO = getTextSize(fontName, text);
 		var fontMap:Array = glyphMap[fontName];
 		var fontPics:Array = sheets[fontName];
 		if (fontMap && fontPics) {
+			var lineNr:int = 0;
 			var curX:int = startX;
 			var curY:int = startY;
+			if (blockVo.lineWidth.length > lineNr) {
+				if (textAlign == BitmapTextAlign.CENTER) {
+					curX += blockVo.width / 2 - blockVo.lineWidth[lineNr] / 2;
+				}
+				if (textAlign == BitmapTextAlign.RIGHT) {
+					curX += blockVo.width - blockVo.lineWidth[lineNr];
+				}
+			}
 			var sourceRectangle:Rectangle = new Rectangle();
 			var destinationPoint:Point = new Point();
 			// Walk the string.
 			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
 				// Identify the glyph.
 				var curChar:int = text.charCodeAt(curCharIdx);
-
 				if (curChar == newLineNChar || curChar == newLineRChar) {
-
 					// skip double new line chars.
 					if (curChar == newLineNChar && curCharIdx < text.length - 1) {
 						curChar = text.charCodeAt(curCharIdx + 1);
@@ -92,9 +98,17 @@ public class BitmapFont {
 					}
 					curX = startX;
 					curY += glyphLineHeight[fontName];
+					lineNr++;
+					if (blockVo.lineWidth.length > lineNr) {
+						if (textAlign == BitmapTextAlign.CENTER) {
+							curX += blockVo.width / 2 - blockVo.lineWidth[lineNr] / 2;
+						}
+						if (textAlign == BitmapTextAlign.RIGHT) {
+							curX += blockVo.width - blockVo.lineWidth[lineNr];
+						}
+					}
 				} else {
 					var curGlyph:BitmapGlyph = fontMap[curChar];
-
 					if (curGlyph) {
 						var sourceBd:BitmapData = fontPics[curGlyph.page];
 						// skip missing glyphs.
@@ -108,7 +122,6 @@ public class BitmapFont {
 							destinationPoint.y = curY + curGlyph.yoffset;
 							// Draw the glyph.
 							target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
-
 							// Update cursor position
 							curX += curGlyph.xadvance;
 						}
@@ -118,8 +131,8 @@ public class BitmapFont {
 		}
 	}
 
-	public static function getTextSize(fontName:String, text:String):Point {
-		var retVal:Point = new Point();
+	public static function getTextSize(fontName:String, text:String):BitmapBlockVO {
+		var retVal:BitmapBlockVO = new BitmapBlockVO();
 		if (!fontName) {
 			fontName = defaultFont;
 		}
@@ -128,6 +141,8 @@ public class BitmapFont {
 		if (fontMap && fontPics) {
 			var curX:int = 0;
 			var curY:int = 0;
+			var nextX:int = 0;
+			var nextY:int = 0;
 			// Walk the string.
 			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
 				// Identify the glyph.
@@ -146,6 +161,7 @@ public class BitmapFont {
 							curCharIdx += 1;
 						}
 					}
+					retVal.lineWidth.push(nextX);
 					curX = 0;
 					curY += glyphLineHeight[fontName];
 				} else {
@@ -154,21 +170,23 @@ public class BitmapFont {
 						var sourceBd:BitmapData = fontPics[curGlyph.page];
 						// skip missing glyphs.
 						if (sourceBd) {
-							var nextX:int = curX + curGlyph.xoffset + curGlyph.width;
-							var nextY:int = curY + curGlyph.yoffset + curGlyph.height;
-							if (retVal.x < nextX) {
-								retVal.x = nextX;
+							nextX = curX + curGlyph.xoffset + curGlyph.width;
+							nextY = curY + curGlyph.yoffset + curGlyph.height;
+							curX += curGlyph.xadvance;
+
+							if (retVal.width < nextX) {
+								retVal.width = nextX;
 							}
-							if (retVal.y < nextY) {
-								retVal.y = nextY;
+							if (retVal.height < nextY) {
+								retVal.height = nextY;
 							}
 							// Update cursor position
-							curX += curGlyph.xadvance;
 						}
 					}
 				}
 			}
 		}
+		retVal.lineWidth.push(nextX);
 		return retVal;
 	}
 
@@ -182,11 +200,9 @@ public class BitmapFont {
 			var pageBD:BitmapData = pagePics[i];
 			addSheet(fontName, i, pageBD, isFlipped);
 		}
-
 		if (useAsDefault || !defaultFont) {
 			defaultFont = fontName;
 		}
-
 		newLineNChar = String("\n").charCodeAt(0);
 		newLineRChar = String("\r").charCodeAt(0);
 	}
@@ -198,11 +214,9 @@ public class BitmapFont {
 		if (!sheets[fontName]) {
 			sheets[fontName] = new Array();
 		}
-
 		if (sheets[fontName][id] != null) {
 			throw new Error("Overwriting sheet!");
 		}
-
 		if (isFlipped) {
 			sheets[fontName][id] = flipVert(bits);
 		} else {
@@ -217,15 +231,11 @@ public class BitmapFont {
 		if (!glyphMap[fontName]) {
 			glyphMap[fontName] = new Array();
 		}
-
 		var fontLines:Array = fontDesc.split("\n");
-
 		for (var i:int = 0; i < fontLines.length; i++) {
 			// Lines can be one of:  info,  page,  chars,  char,  common
-
 			var fontLine:Array = (fontLines[i] as String).split(" ");
 			var keyWord:String = (fontLine[0] as String).toLowerCase();
-
 			if (keyWord == "char") {
 				parseChar(fontName, fontLine);
 			} else if (keyWord == "common") {
@@ -240,7 +250,6 @@ public class BitmapFont {
 	 */
 	private static function parseChar(fontName:String, charLine:Array):void {
 		var g:BitmapGlyph = new BitmapGlyph();
-
 		for (var i:int = 1; i < charLine.length; i++) {
 			// Parse to key value.
 			var charEntry:Array = (charLine[i] as String).split("=");
@@ -283,10 +292,8 @@ public class BitmapFont {
 		var mat:Matrix = new Matrix();
 		mat.d = -1;
 		mat.ty = bd.height;
-
 		var flip:BitmapData = new BitmapData(bd.width, bd.height, bd.transparent, 0x0);
 		flip.draw(bd, mat);
-
 		return flip;
 	}
 
