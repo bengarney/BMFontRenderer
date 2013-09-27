@@ -19,7 +19,7 @@ import flash.utils.Dictionary;
  *      - Line breaks/text alignment.
  *      - Unicode outside of the Basic Multilingual Plane.
  */
-public class BMFont {
+public class BitmapFont {
 
 	private static var glyphMap:Dictionary = new Dictionary();
 	private static var sheets:Dictionary = new Dictionary();
@@ -31,12 +31,17 @@ public class BMFont {
 	//---------------------------------
 
 	public static function createText(text:String, fontName:String = null, startX:int = 0, startY:int = 0):BitmapData {
+		var retVal:BitmapData;
 		if (!fontName) {
 			fontName = defaultFont;
 		}
 		var size:Point = getTextSize(fontName, text);
-		var retVal:BitmapData = new BitmapData(startX + size.x, startY + size.y, true, 0xFF);
-		drawString(text, retVal, fontName, startX, startY);
+		if (size.x && size.y) {
+			retVal = new BitmapData(startX + size.x, startY + size.y, true, 0xFF);
+			drawString(text, retVal, fontName, startX, startY);
+		} else {
+			retVal = new BitmapData(1, 1, true, 0xFF);
+		}
 		return retVal;
 	}
 
@@ -65,32 +70,35 @@ public class BMFont {
 		var fontMap:Array = glyphMap[fontName];
 		var fontPics:Array = sheets[fontName];
 
-		// Walk the string.
-		for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
-			// Identify the glyph.
-			var curChar:int = text.charCodeAt(curCharIdx);
-			var curGlyph:BMGlyph = fontMap[curChar];
-			var sourceBd:BitmapData = fontPics[curGlyph.page];
+		if (fontMap && fontPics) {
 
-			// skip missing glyphs.
-			if (!curGlyph || !sourceBd) {
-				continue;
+			// Walk the string.
+			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
+				// Identify the glyph.
+				var curChar:int = text.charCodeAt(curCharIdx);
+				var curGlyph:BitmapGlyph = fontMap[curChar];
+				var sourceBd:BitmapData = fontPics[curGlyph.page];
+
+				// skip missing glyphs.
+				if (!curGlyph || !sourceBd) {
+					continue;
+				}
+
+				// set draw parameters
+				sourceRectangle.x = curGlyph.x;
+				sourceRectangle.y = curGlyph.y;
+				sourceRectangle.width = curGlyph.width;
+				sourceRectangle.height = curGlyph.height;
+
+				destinationPoint.x = curX + curGlyph.xoffset;
+				destinationPoint.y = curY + curGlyph.yoffset;
+
+				// Draw the glyph.
+				target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
+
+				// Update cursor position
+				curX += curGlyph.xadvance;
 			}
-
-			// set draw parameters
-			sourceRectangle.x = curGlyph.x;
-			sourceRectangle.y = curGlyph.y;
-			sourceRectangle.width = curGlyph.width;
-			sourceRectangle.height = curGlyph.height;
-
-			destinationPoint.x = curX + curGlyph.xoffset;
-			destinationPoint.y = curY + curGlyph.yoffset;
-
-			// Draw the glyph.
-			target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
-
-			// Update cursor position
-			curX += curGlyph.xadvance;
 		}
 	}
 
@@ -100,32 +108,34 @@ public class BMFont {
 		var fontMap:Array = glyphMap[fontName];
 		var fontPics:Array = sheets[fontName];
 
-		// Walk the string.
-		for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
-			// Identify the glyph.
-			var curChar:int = text.charCodeAt(curCharIdx);
-			var curGlyph:BMGlyph = fontMap[curChar];
-			var sourceBd:BitmapData = fontPics[curGlyph.page];
+		if (fontMap && fontPics) {
 
-			// skip missing glyphs.
-			if (!curGlyph || !sourceBd) {
-				continue;
-			}
+			// Walk the string.
+			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
+				// Identify the glyph.
+				var curChar:int = text.charCodeAt(curCharIdx);
+				var curGlyph:BitmapGlyph = fontMap[curChar];
+				var sourceBd:BitmapData = fontPics[curGlyph.page];
 
-			if (curCharIdx == 0) {
-				retVal.x += curGlyph.xoffset;
-			}
-			if (curCharIdx != text.length - 1) {
-				retVal.x += curGlyph.xadvance;
-			} else {
-				retVal.x += curGlyph.width;
-			}
+				// skip missing glyphs.
+				if (!curGlyph || !sourceBd) {
+					continue;
+				}
 
-			if (retVal.y < curGlyph.height + curGlyph.yoffset) {
-				retVal.y = curGlyph.height + curGlyph.yoffset;
+				if (curCharIdx == 0) {
+					retVal.x += curGlyph.xoffset;
+				}
+				if (curCharIdx != text.length - 1) {
+					retVal.x += curGlyph.xadvance;
+				} else {
+					retVal.x += curGlyph.width;
+				}
+
+				if (retVal.y < curGlyph.height + curGlyph.yoffset) {
+					retVal.y = curGlyph.height + curGlyph.yoffset;
+				}
 			}
 		}
-
 		return retVal;
 	}
 
@@ -208,7 +218,7 @@ public class BMFont {
 	 * description..
 	 */
 	protected static function parseChar(fontName:String, charLine:Array):void {
-		var g:BMGlyph = new BMGlyph();
+		var g:BitmapGlyph = new BitmapGlyph();
 
 		if (!glyphMap[fontName]) {
 			glyphMap[fontName] = new Array();

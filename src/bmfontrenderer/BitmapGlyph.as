@@ -5,7 +5,7 @@ package bmfontrenderer {
  * Note that field names must map identically to the strings in the .fnt
  * file, as we directly assign based on key.
  */
-public class BMGlyph {
+public class BitmapGlyph {
 	public var id:int;
 	public var x:int, y:int;
 	public var width:int, height:int;
