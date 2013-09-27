@@ -26,6 +26,9 @@ public class BitmapFont {
 
 	private static var defaultFont:String;
 
+	private static var newLineNChar:int;
+	private static var newLineRChar:int;
+
 	//---------------------------------
 	//
 	//---------------------------------
@@ -76,28 +79,52 @@ public class BitmapFont {
 			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
 				// Identify the glyph.
 				var curChar:int = text.charCodeAt(curCharIdx);
-				var curGlyph:BitmapGlyph = fontMap[curChar];
-				var sourceBd:BitmapData = fontPics[curGlyph.page];
 
-				// skip missing glyphs.
-				if (!curGlyph || !sourceBd) {
-					continue;
+				if (curChar == newLineNChar || curChar == newLineRChar) {
+
+					// skip double new line chars.
+					if (curChar == newLineNChar && curCharIdx < text.length - 1) {
+						curChar = text.charCodeAt(curCharIdx + 1);
+						if (curChar == newLineRChar) {
+							curCharIdx += 1;
+						}
+					}
+					if (curChar == newLineRChar && curCharIdx < text.length - 1) {
+						curChar = text.charCodeAt(curCharIdx + 1);
+						if (curChar == newLineNChar) {
+							curCharIdx += 1;
+						}
+					}
+
+					curX = startX;
+					curY += 50;
+
+				} else {
+					var curGlyph:BitmapGlyph = fontMap[curChar];
+
+					if (curGlyph) {
+						var sourceBd:BitmapData = fontPics[curGlyph.page];
+
+						// skip missing glyphs.
+						if (sourceBd) {
+
+							// set draw parameters
+							sourceRectangle.x = curGlyph.x;
+							sourceRectangle.y = curGlyph.y;
+							sourceRectangle.width = curGlyph.width;
+							sourceRectangle.height = curGlyph.height;
+
+							destinationPoint.x = curX + curGlyph.xoffset;
+							destinationPoint.y = curY + curGlyph.yoffset;
+
+							// Draw the glyph.
+							target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
+
+							// Update cursor position
+							curX += curGlyph.xadvance;
+						}
+					}
 				}
-
-				// set draw parameters
-				sourceRectangle.x = curGlyph.x;
-				sourceRectangle.y = curGlyph.y;
-				sourceRectangle.width = curGlyph.width;
-				sourceRectangle.height = curGlyph.height;
-
-				destinationPoint.x = curX + curGlyph.xoffset;
-				destinationPoint.y = curY + curGlyph.yoffset;
-
-				// Draw the glyph.
-				target.copyPixels(sourceBd, sourceRectangle, destinationPoint, null, null, true);
-
-				// Update cursor position
-				curX += curGlyph.xadvance;
 			}
 		}
 	}
@@ -115,24 +142,26 @@ public class BitmapFont {
 				// Identify the glyph.
 				var curChar:int = text.charCodeAt(curCharIdx);
 				var curGlyph:BitmapGlyph = fontMap[curChar];
-				var sourceBd:BitmapData = fontPics[curGlyph.page];
+				if (curGlyph) {
 
-				// skip missing glyphs.
-				if (!curGlyph || !sourceBd) {
-					continue;
-				}
+					var sourceBd:BitmapData = fontPics[curGlyph.page];
 
-				if (curCharIdx == 0) {
-					retVal.x += curGlyph.xoffset;
-				}
-				if (curCharIdx != text.length - 1) {
-					retVal.x += curGlyph.xadvance;
-				} else {
-					retVal.x += curGlyph.width;
-				}
+					// skip missing glyphs.
+					if (sourceBd) {
 
-				if (retVal.y < curGlyph.height + curGlyph.yoffset) {
-					retVal.y = curGlyph.height + curGlyph.yoffset;
+						if (curCharIdx == 0) {
+							retVal.x += curGlyph.xoffset;
+						}
+						if (curCharIdx != text.length - 1) {
+							retVal.x += curGlyph.xadvance;
+						} else {
+							retVal.x += curGlyph.width;
+						}
+
+						if (retVal.y < curGlyph.height + curGlyph.yoffset) {
+							retVal.y = curGlyph.height + curGlyph.yoffset;
+						}
+					}
 				}
 			}
 		}
@@ -153,6 +182,9 @@ public class BitmapFont {
 		if (useAsDefault || !defaultFont) {
 			defaultFont = fontName;
 		}
+
+		newLineNChar = String("\n").charCodeAt(0);
+		newLineRChar = String("\r").charCodeAt(0);
 	}
 
 	/**
@@ -227,16 +259,14 @@ public class BitmapFont {
 		for (var i:int = 1; i < charLine.length; i++) {
 			// Parse to key value.
 			var charEntry:Array = (charLine[i] as String).split("=");
-			if (charEntry.length != 2) {
-				continue;
-			}
+			if (charEntry.length == 2) {
+				var charKey:String = charEntry[0];
+				var charVal:String = charEntry[1];
 
-			var charKey:String = charEntry[0];
-			var charVal:String = charEntry[1];
-
-			// Assign to glyph.
-			if (g.hasOwnProperty(charKey)) {
-				g[charKey] = charVal;
+				// Assign to glyph.
+				if (g.hasOwnProperty(charKey)) {
+					g[charKey] = charVal;
+				}
 			}
 		}
 		glyphMap[fontName][g.id] = g;
