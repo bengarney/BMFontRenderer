@@ -30,7 +30,6 @@ public class BitmapFont {
 	private static var newLineNChar:int;
 	private static var newLineRChar:int;
 
-
 	//---------------------------------
 	//
 	//---------------------------------
@@ -44,16 +43,47 @@ public class BitmapFont {
 	 * @param startY Y pixel position to start drawing at.
 	 *
 	 */
-	public static function drawString(text:String, target:BitmapData = null, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left"):BitmapData {
+	public static function drawString(text:String, target:BitmapData = null, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left", minWidth:int = 0, minHeight:int = 0, maxWidth:int = 0, maxHeight:int = 0):BitmapData {
 		if (!fontName) {
 			fontName = defaultFont;
 		}
 		var blockVo:BitmapBlockVO = getTextSize(fontName, text);
 		if (target == null) {
-			if (blockVo.width && blockVo.height) {
-				target = new BitmapData(startX + blockVo.width, startY + blockVo.height, true, 0xFF);
-			} else {
-				target = new BitmapData(1, 1, true, 0xFF);
+			var bitmapWidth:int = blockVo.width;
+			var bitmapHeight:int = blockVo.height;
+			// handle min/max size
+			if (maxWidth > 0) {
+				if (bitmapWidth > maxWidth) {
+					bitmapWidth = maxWidth;
+				}
+			}
+			if (minWidth > 0) {
+				if (bitmapWidth < minWidth) {
+					bitmapWidth = minWidth;
+				}
+			}
+			if (maxHeight > 0) {
+				if (bitmapHeight > maxHeight) {
+					bitmapHeight = maxHeight;
+				}
+			}
+			if (minHeight > 0) {
+				if (bitmapHeight < minHeight) {
+					bitmapHeight = minHeight;
+				}
+			}
+			if (bitmapWidth < 1) {
+				bitmapWidth = 1;
+			}
+			if (bitmapHeight < 1) {
+				bitmapHeight = 1;
+			}
+			target = new BitmapData(bitmapWidth, bitmapHeight, true, 0xFF);
+		}
+
+		if (minWidth > 0) {
+			if (blockVo.width < minWidth) {
+				blockVo.width = minWidth;
 			}
 		}
 

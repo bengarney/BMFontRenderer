@@ -3,6 +3,8 @@ import bmfontrenderer.BitmapFont;
 import bmfontrenderer.BitmapTextAlign;
 
 import com.bit101.components.ComboBox;
+import com.bit101.components.Label;
+import com.bit101.components.NumericStepper;
 import com.bit101.components.Text;
 
 import flash.display.Bitmap;
@@ -13,7 +15,7 @@ import flash.display.StageScaleMode;
 import flash.events.Event;
 import flash.utils.ByteArray;
 
-[SWF(backgroundColor="0x1234567")]
+[SWF(backgroundColor="0x888888")]
 public class SimpleTextTestMain extends Sprite {
 
 	[Embed(source="testFont.fnt", mimeType="application/octet-stream")]
@@ -28,35 +30,45 @@ public class SimpleTextTestMain extends Sprite {
 	[Embed(source="test2Font.png")]
 	public var fontSheet2:Class;
 
+	////////////////
+	private const TEST_FONT:String = "testFont";
+	private const TEST_FONT_2:String = "testFont2";
+
+	////////////////
 
 	private var outputBd:BitmapData;
 	private var output:Bitmap;
 
 	private var border:Sprite;
 
+	private var offsetXText:NumericStepper;
+	private var offsetYText:NumericStepper;
+
 	private var fontNames:ComboBox;
 	private var testText:Text;
+
+	private var minWidthText:NumericStepper;
+	private var minHeightText:NumericStepper;
+	private var maxWidthText:NumericStepper;
+	private var maxHeightText:NumericStepper;
+
 	private var textAlignment:ComboBox;
-
-	private static const TEST_FONT:String = "testFont";
-
-	private static const TEST_FONT_2:String = "testFont2";
 
 	public function SimpleTextTestMain() {
 		// Don't scale.
 		stage.align = StageAlign.TOP_LEFT;
 		stage.scaleMode = StageScaleMode.NO_SCALE;
 
-		// Get the font data and pass it to the BMFont.
+		///////////////////////
+
 		var fontBits:ByteArray = new fontData();
 		var font:String = fontBits.readUTFBytes(fontBits.length);
-
 		BitmapFont.addFont(TEST_FONT, font, [(new fontSheet()).bitmapData]);
 
-		// Get the font data and pass it to the BMFont.
+		///////////////////////
+
 		fontBits = new fontData2();
 		font = fontBits.readUTFBytes(fontBits.length);
-
 		BitmapFont.addFont(TEST_FONT_2, font, [(new fontSheet2()).bitmapData]);
 
 		// OK, draw some fonts!
@@ -74,8 +86,11 @@ public class SimpleTextTestMain extends Sprite {
 		border.y = 20;
 		addChild(border);
 
-		fontNames = new ComboBox(this, 5, 5);
+		/////////////////////////////
 
+		new Label(this, 5, 5, "Font:");
+
+		fontNames = new ComboBox(this, 40, 5);
 		fontNames.addItem(TEST_FONT);
 		fontNames.addItem(TEST_FONT_2);
 		fontNames.selectedIndex = 0;
@@ -84,7 +99,23 @@ public class SimpleTextTestMain extends Sprite {
 		testText = new Text(this, 5, 30, "Hello!");
 		testText.addEventListener(Event.CHANGE, handleTextInput);
 
-		textAlignment = new ComboBox(this, 5, 150);
+		/////////////////////////////
+
+		new Label(this, 5, 140, "Offset position [OPTIONAL]");
+
+		offsetXText = new NumericStepper(this, 5, 160);
+		offsetXText.addEventListener(Event.CHANGE, handleTextInput);
+		offsetXText.value = 0;
+		offsetXText.step = 10;
+		offsetYText = new NumericStepper(this, 90, 160);
+		offsetYText.addEventListener(Event.CHANGE, handleTextInput);
+		offsetYText.value = 0;
+		offsetYText.step = 10;
+
+		/////////////////////////////
+
+		new Label(this, 5, 185, "Text alignment:");
+		textAlignment = new ComboBox(this, 5, 200);
 
 		textAlignment.addItem(BitmapTextAlign.LEFT);
 		textAlignment.addItem(BitmapTextAlign.CENTER);
@@ -93,8 +124,35 @@ public class SimpleTextTestMain extends Sprite {
 		textAlignment.selectedIndex = 0;
 		textAlignment.addEventListener(Event.SELECT, handleTextInput);
 
-		handleTextInput();
+		/////////////////////////////
 
+		new Label(this, 5, 230, "Min size [OPTIONAL]");
+
+		minWidthText = new NumericStepper(this, 5, 250);
+		minWidthText.addEventListener(Event.CHANGE, handleTextInput);
+		minWidthText.value = 0;
+		minWidthText.step = 10;
+		minHeightText = new NumericStepper(this, 90, 250);
+		minHeightText.addEventListener(Event.CHANGE, handleTextInput);
+		minHeightText.value = 0;
+		minHeightText.step = 10;
+
+		/////////////////////////////
+
+		new Label(this, 5, 270, "Max size [OPTIONAL]");
+
+		maxWidthText = new NumericStepper(this, 5, 290);
+		maxWidthText.addEventListener(Event.CHANGE, handleTextInput);
+		maxWidthText.value = 0;
+		maxWidthText.step = 10;
+		maxHeightText = new NumericStepper(this, 90, 290);
+		maxHeightText.addEventListener(Event.CHANGE, handleTextInput);
+		maxHeightText.value = 0;
+		maxHeightText.step = 10;
+
+		/////////////////////////////
+
+		handleTextInput();
 	}
 
 	private function handleTextInput(event:Event = null):void {
@@ -103,7 +161,14 @@ public class SimpleTextTestMain extends Sprite {
 			removeChild(output);
 		}
 
-		outputBd = BitmapFont.drawString(testText.text, null, String(fontNames.selectedItem), 0, 0, String(textAlignment.selectedItem));
+		outputBd = BitmapFont.drawString( //
+				testText.text, null,  //
+				String(fontNames.selectedItem), //
+				offsetXText.value, offsetYText.value,  //
+				String(textAlignment.selectedItem), //
+				minWidthText.value, minHeightText.value, //
+				maxWidthText.value, maxHeightText.value //
+		);
 		output = new Bitmap(outputBd);
 		addChild(output);
 		output.x = 220;
