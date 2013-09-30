@@ -35,19 +35,6 @@ public class BitmapFont {
 	//
 	//---------------------------------
 
-	public static function createText(text:String, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left"):BitmapData {
-		var retVal:BitmapData;
-		var blockVo:BitmapBlockVO = getTextSize(fontName, text);
-		if (blockVo.width && blockVo.height) {
-			retVal = new BitmapData(startX + blockVo.width, startY + blockVo.height, true, 0xFF);
-			drawString(text, retVal, fontName, startX, startY, textAlign);
-		} else {
-			retVal = new BitmapData(1, 1, true, 0xFF);
-		}
-		return retVal;
-	}
-
-
 	/**
 	 * Draw a string to a BitmapData.
 	 *
@@ -57,11 +44,19 @@ public class BitmapFont {
 	 * @param startY Y pixel position to start drawing at.
 	 *
 	 */
-	public static function drawString(text:String, target:BitmapData, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left"):void {
+	public static function drawString(text:String, target:BitmapData = null, fontName:String = null, startX:int = 0, startY:int = 0, textAlign:String = "left"):BitmapData {
 		if (!fontName) {
 			fontName = defaultFont;
 		}
 		var blockVo:BitmapBlockVO = getTextSize(fontName, text);
+		if (target == null) {
+			if (blockVo.width && blockVo.height) {
+				target = new BitmapData(startX + blockVo.width, startY + blockVo.height, true, 0xFF);
+			} else {
+				target = new BitmapData(1, 1, true, 0xFF);
+			}
+		}
+
 		var fontMap:Array = glyphMap[fontName];
 		var fontPics:Array = sheets[fontName];
 		if (fontMap && fontPics) {
@@ -129,6 +124,7 @@ public class BitmapFont {
 				}
 			}
 		}
+		return target;
 	}
 
 	public static function getTextSize(fontName:String, text:String):BitmapBlockVO {
@@ -143,6 +139,7 @@ public class BitmapFont {
 			var curY:int = 0;
 			var nextX:int = 0;
 			var nextY:int = 0;
+			var lineWidth:int = 0;
 			// Walk the string.
 			for (var curCharIdx:int = 0; curCharIdx < text.length; curCharIdx++) {
 				// Identify the glyph.
@@ -161,7 +158,7 @@ public class BitmapFont {
 							curCharIdx += 1;
 						}
 					}
-					retVal.lineWidth.push(nextX);
+					retVal.lineWidth.push(lineWidth);
 					curX = 0;
 					curY += glyphLineHeight[fontName];
 				} else {
@@ -170,23 +167,27 @@ public class BitmapFont {
 						var sourceBd:BitmapData = fontPics[curGlyph.page];
 						// skip missing glyphs.
 						if (sourceBd) {
+							// Update cursor position
 							nextX = curX + curGlyph.xoffset + curGlyph.width;
 							nextY = curY + curGlyph.yoffset + curGlyph.height;
 							curX += curGlyph.xadvance;
-
-							if (retVal.width < nextX) {
-								retVal.width = nextX;
+							if (curX > nextX) {
+								lineWidth = curX;
+							} else {
+								lineWidth = nextX;
+							}
+							if (retVal.width < lineWidth) {
+								retVal.width = lineWidth;
 							}
 							if (retVal.height < nextY) {
 								retVal.height = nextY;
 							}
-							// Update cursor position
 						}
 					}
 				}
 			}
 		}
-		retVal.lineWidth.push(nextX);
+		retVal.lineWidth.push(lineWidth);
 		return retVal;
 	}
 

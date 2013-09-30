@@ -103,7 +103,7 @@ public class SimpleTextTestMain extends Sprite {
 			removeChild(output);
 		}
 
-		outputBd = BitmapFont.createText(testText.text, String(fontNames.selectedItem), 0, 0, String(textAlignment.selectedItem));
+		outputBd = BitmapFont.drawString(testText.text, null, String(fontNames.selectedItem), 0, 0, String(textAlignment.selectedItem));
 		output = new Bitmap(outputBd);
 		addChild(output);
 		output.x = 220;
