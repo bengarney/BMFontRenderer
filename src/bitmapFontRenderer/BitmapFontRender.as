@@ -1,4 +1,4 @@
-package bmfontrenderer {
+package bitmapFontRenderer {
 import flash.display.BitmapData;
 import flash.geom.Matrix;
 import flash.geom.Point;
@@ -19,7 +19,7 @@ import flash.utils.Dictionary;
  *      - Line breaks/text alignment.
  *      - Unicode outside of the Basic Multilingual Plane.
  */
-public class BitmapFont {
+public class BitmapFontRender {
 
 	public static const LEFT:String = "left";
 	public static const CENTER:String = "center";
@@ -101,10 +101,10 @@ public class BitmapFont {
 			var curX:int = offsetX;
 			var curY:int = offsetY;
 			if (blockVo.lineWidth.length > lineNr) {
-				if (textAlign == BitmapFont.CENTER) {
+				if (textAlign == BitmapFontRender.CENTER) {
 					curX += blockVo.width / 2 - blockVo.lineWidth[lineNr] / 2;
 				}
-				if (textAlign == BitmapFont.RIGHT) {
+				if (textAlign == BitmapFontRender.RIGHT) {
 					curX += blockVo.width - blockVo.lineWidth[lineNr];
 				}
 			}
@@ -132,10 +132,10 @@ public class BitmapFont {
 					curY += glyphLineHeight[fontName];
 					lineNr++;
 					if (blockVo.lineWidth.length > lineNr) {
-						if (textAlign == BitmapFont.CENTER) {
+						if (textAlign == BitmapFontRender.CENTER) {
 							curX += blockVo.width / 2 - blockVo.lineWidth[lineNr] / 2;
 						}
-						if (textAlign == BitmapFont.RIGHT) {
+						if (textAlign == BitmapFontRender.RIGHT) {
 							curX += blockVo.width - blockVo.lineWidth[lineNr];
 						}
 					}

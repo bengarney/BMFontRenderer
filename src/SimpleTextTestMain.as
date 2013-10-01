@@ -1,6 +1,6 @@
 package {
-import bmfontrenderer.BitmapBlockVO;
-import bmfontrenderer.BitmapFont;
+import bitmapFontRenderer.BitmapBlockVO;
+import bitmapFontRenderer.BitmapFontRender;
 
 import com.bit101.components.ComboBox;
 import com.bit101.components.Label;
@@ -63,13 +63,13 @@ public class SimpleTextTestMain extends Sprite {
 
 		var fontBits:ByteArray = new fontData();
 		var font:String = fontBits.readUTFBytes(fontBits.length);
-		BitmapFont.addFont(TEST_FONT, font, [(new fontSheet()).bitmapData]);
+		BitmapFontRender.addFont(TEST_FONT, font, [(new fontSheet()).bitmapData]);
 
 		///////////////////////
 
 		fontBits = new fontData2();
 		font = fontBits.readUTFBytes(fontBits.length);
-		BitmapFont.addFont(TEST_FONT_2, font, [(new fontSheet2()).bitmapData]);
+		BitmapFontRender.addFont(TEST_FONT_2, font, [(new fontSheet2()).bitmapData]);
 
 		// OK, draw some fonts!
 		//var out:BitmapData = new BitmapData(600, 300, true, 0x0);
@@ -117,9 +117,9 @@ public class SimpleTextTestMain extends Sprite {
 		new Label(this, 5, 185, "Text alignment:");
 		textAlignment = new ComboBox(this, 5, 200);
 
-		textAlignment.addItem(BitmapFont.LEFT);
-		textAlignment.addItem(BitmapFont.CENTER);
-		textAlignment.addItem(BitmapFont.RIGHT);
+		textAlignment.addItem(BitmapFontRender.LEFT);
+		textAlignment.addItem(BitmapFontRender.CENTER);
+		textAlignment.addItem(BitmapFontRender.RIGHT);
 
 		textAlignment.selectedIndex = 0;
 		textAlignment.addEventListener(Event.SELECT, handleTextInput);
@@ -161,7 +161,7 @@ public class SimpleTextTestMain extends Sprite {
 			removeChild(output);
 		}
 
-		outputBd = BitmapFont.drawString( //
+		outputBd = BitmapFontRender.drawString( //
 				testText.text, null,  //
 				String(fontNames.selectedItem), //
 				offsetXText.value, offsetYText.value,  //

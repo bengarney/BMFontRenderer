@@ -1,4 +1,4 @@
-package bmfontrenderer {
+package bitmapFontRenderer {
 /**
  * Represents a single glyph from a BMFont. A glyph is a character.
  *
