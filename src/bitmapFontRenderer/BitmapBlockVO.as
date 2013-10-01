@@ -1,4 +1,4 @@
-package bmfontrenderer {
+package bitmapFontRenderer {
 public class BitmapBlockVO {
 
 	public var width:int;

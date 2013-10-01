@@ -1,5 +1,5 @@
 package {
-import bmfontrenderer.BitmapFont;
+import bitmapFontRenderer.BitmapFontRender;
 
 import flash.display.Bitmap;
 import flash.display.BitmapData;
@@ -26,13 +26,13 @@ public class BMFontRenderer extends Sprite {
 		var fontBits:ByteArray = new fontData();
 		var font:String = fontBits.readUTFBytes(fontBits.length);
 
-		BitmapFont.addFont(0, font, (new fontSheet()).bitmapData);
+		BitmapFontRender.addFont("test", font, [(new fontSheet()).bitmapData], true);
 
 		// OK, draw some fonts!
 //		var out:BitmapData = new BitmapData(200, 100, true, 0x0);
 //		BMFont.drawString("Hello, world!", out);
 
-		var out2:BitmapData  = BitmapFont.createText("Hello, world!");
+		var out2:BitmapData = BitmapFontRender.renderText("Hello, world!");
 
 		var outb:Bitmap = new Bitmap(out2);
 		addChild(outb);
