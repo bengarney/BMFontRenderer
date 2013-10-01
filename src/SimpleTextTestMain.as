@@ -1,6 +1,6 @@
 package {
+import bmfontrenderer.BitmapBlockVO;
 import bmfontrenderer.BitmapFont;
-import bmfontrenderer.BitmapTextAlign;
 
 import com.bit101.components.ComboBox;
 import com.bit101.components.Label;
@@ -117,9 +117,9 @@ public class SimpleTextTestMain extends Sprite {
 		new Label(this, 5, 185, "Text alignment:");
 		textAlignment = new ComboBox(this, 5, 200);
 
-		textAlignment.addItem(BitmapTextAlign.LEFT);
-		textAlignment.addItem(BitmapTextAlign.CENTER);
-		textAlignment.addItem(BitmapTextAlign.RIGHT);
+		textAlignment.addItem(BitmapFont.LEFT);
+		textAlignment.addItem(BitmapFont.CENTER);
+		textAlignment.addItem(BitmapFont.RIGHT);
 
 		textAlignment.selectedIndex = 0;
 		textAlignment.addEventListener(Event.SELECT, handleTextInput);
